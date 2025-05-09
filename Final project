@@ -1,0 +1,100 @@
+'''
+Bracen Gruver
+
+a program that helps us gain some insight into a situation that can occur in Basketball. 
+When down 3 with 30 seconds left--it is better to take a hard 3 or an easy two and attempt 
+to get another possession? We will attempt to answer this by building a type of program called 
+a simulation. We will take what we have learned about our 'tools' and the idea of abstraction 
+and work toward building some statistics that might drive a decision!
+'''
+
+import random
+
+# Parameters
+THREE_PT_PERCENTAGE = 0.35  
+TWO_PT_PERCENTAGE = 0.6
+FT_PERCENTAGE = 0.5
+OFFENSIVE_REBOUND_PROB = 0.25
+WIN_IN_OT_PROB = 0.5
+SIMULATIONS = 10000
+OPP_PTS = 3
+
+# Timing (in seconds)
+THREE_PT_TIME = 5
+TWO_PT_TIME = 6
+FOUL_AND_FT_TIME = 2
+REPOSSESSION_TIME = 9
+TOTAL_TIME = 30
+
+
+def take_three():
+    time_remaining = TOTAL_TIME - THREE_PT_TIME
+    if random.random() < THREE_PT_PERCENTAGE:
+        if random.random() > WIN_IN_OT_PROB:  # Go to OT and maybe win
+            return 1  # win in OT
+        else:
+            return 0   # lose in OT
+    else:
+        return 0  # Miss and lose
+
+def take_two_and_foul():
+    time_remaining = TOTAL_TIME
+
+
+    # Take 2-pointer
+    time_remaining -= TWO_PT_TIME
+    if random.random() > TWO_PT_PERCENTAGE:
+        return 0  # Missed 2, lose immediately
+    
+    TEAM_PTS = 2
+    # Foul and simulate opponent free throws
+    time_remaining -= FOUL_AND_FT_TIME
+    
+    ft1 = random.random() < FT_PERCENTAGE
+    ft2 = random.random() < FT_PERCENTAGE
+    OPP_NEW_PTS = OPP_PTS + int(ft1) + int(ft2)
+
+    if time_remaining < REPOSSESSION_TIME:
+        return 0  # No time left to try and score again
+
+    time_remaining -= REPOSSESSION_TIME
+
+    # final possession, based on score
+    if OPP_NEW_PTS - TEAM_PTS == 1:
+        if random.random() < TWO_PT_PERCENTAGE:
+            return 1  # You try to win
+        else:
+            return 0 # didnt make the shot
+    elif OPP_NEW_PTS - TEAM_PTS == 2:
+        if random.random() < TWO_PT_PERCENTAGE:
+            if random.random() > WIN_IN_OT_PROB:  # Go to OT and maybe win
+                return 1  # win in OT
+            else:
+                return 0   # lose in OT
+        else:
+            return 0 # didnt make the shot
+    elif OPP_NEW_PTS - TEAM_PTS == 3:
+        if random.random() < THREE_PT_PERCENTAGE:
+            if random.random() > WIN_IN_OT_PROB:  # Go to OT and maybe win
+                return 1  # win in OT
+            else:
+                return 0   # lose in OT
+        else:
+            return 0 # didnt make the shot
+    else:
+        return 0  # Miss and lose
+
+    
+
+# Simulate
+wins_three = 0
+wins_two_foul = 0
+
+for _ in range(SIMULATIONS):
+    wins_three += take_three()
+    wins_two_foul += take_two_and_foul()
+
+# Output
+print("Take a 3-pointer: {:.2f}% win rate".format((wins_three / SIMULATIONS) * 100))
+print("Take a 2-pointer and foul: {:.2f}% win rate".format((wins_two_foul / SIMULATIONS) * 100))
+print()
